@@ -214,10 +214,16 @@ export const demoProvider: DataProvider = {
       rows.set(teamId, {
         rank: 0, team: db.teams.get(teamId)!, played: 0, won: 0, drawn: 0, lost: 0,
         goalsFor: 0, goalsAgainst: 0, points: 0, form: [],
+        home: { played: 0, goalsFor: 0, goalsAgainst: 0 },
+        away: { played: 0, goalsFor: 0, goalsAgainst: 0 },
       });
     }
-    const apply = (row: StandingRow, gf: number, ga: number) => {
+    const apply = (row: StandingRow, gf: number, ga: number, venue: "home" | "away") => {
       const r: FormResult = gf > ga ? "W" : gf < ga ? "L" : "D";
+      const split = row[venue]!;
+      split.played++;
+      split.goalsFor += gf;
+      split.goalsAgainst += ga;
       row.played++;
       row.goalsFor += gf;
       row.goalsAgainst += ga;
@@ -227,8 +233,8 @@ export const demoProvider: DataProvider = {
       row.form = [...row.form, r].slice(-5);
     };
     for (const m of results) {
-      apply(rows.get(m.home.id)!, m.score!.home, m.score!.away);
-      apply(rows.get(m.away.id)!, m.score!.away, m.score!.home);
+      apply(rows.get(m.home.id)!, m.score!.home, m.score!.away, "home");
+      apply(rows.get(m.away.id)!, m.score!.away, m.score!.home, "away");
     }
     return [...rows.values()]
       .sort(

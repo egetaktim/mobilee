@@ -1,54 +1,45 @@
 import type { Metadata } from "next";
 import { Card } from "@/components/ui";
 
-export const metadata: Metadata = { title: "Yasal Uyarı" };
+export const metadata: Metadata = { title: "Uyarı" };
 
 export default function LegalPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <h1 className="text-2xl font-bold">Yasal Uyarı ve Kullanım Koşulları</h1>
+      <h1 className="text-2xl font-bold">Uyarı</h1>
 
-      <Card title="Bu site ne yapar, ne yapmaz?">
+      <Card title="Bu site nedir?">
         <ul className="list-disc space-y-2 pl-5 text-sm">
-          <li>Bülteninoğlu yalnızca oynanmış futbol maçlarının sonuçlarından derlenen <strong>istatistikleri</strong> gösterir.</li>
-          <li>Site <strong>tahmin, kupon, &quot;banko&quot; veya bahis tavsiyesi sunmaz</strong>; hiçbir içerik bir sonuca bahis yapılmasını önermez.</li>
-          <li>Site <strong>bahis oranı yayınlamaz</strong>, bahis sitelerinin reklamını yapmaz ve bu sitelere bağlantı vermez.</li>
-          <li>Site <strong>bahis kabul etmez</strong>, para yatırma veya ödeme işlemi barındırmaz.</li>
-          <li>Ücretli üyelik, &quot;VIP tahmin&quot; veya benzeri bir hizmet sunulmaz.</li>
+          <li>Bültenin Oğlu, küçük bir arkadaş grubu için hazırlanmış <strong>özel</strong> bir istatistik sitesidir; herkese açık değildir.</li>
+          <li>Öneriler geçmiş skorlardan hesaplanan <strong>ihtimallerdir, garanti değildir.</strong> Model kadro, sakatlık ve motivasyon gibi bilgileri bilmez.</li>
+          <li>Site bahis kabul etmez, para işlemi yapmaz ve bahis sitelerine yönlendirmez.</li>
         </ul>
       </Card>
 
-      <Card title="Yasal çerçeve">
+      <Card title="Hatırlatma">
         <div className="space-y-3 text-sm text-muted">
           <p>
-            Türkiye&apos;de spor müsabakalarına dayalı bahis yalnızca yetkili kuruluşlar tarafından düzenlenebilir.
-            7258 sayılı Kanun uyarınca izinsiz bahis oynatmak, buna yer veya imkân sağlamak ve bu tür oyunların
-            reklamını yapmak suçtur. Bülteninoğlu bu faaliyetlerin hiçbirini yürütmez ve desteklemez.
+            Türkiye&apos;de spor bahsi yalnızca yetkili kuruluşlar (iddaa ve lisanslı bayileri) üzerinden yasaldır; izinsiz
+            sitelerde bahis oynamak ve oynatmak 7258 sayılı Kanun kapsamında suçtur. Bahis 18 yaşından küçükler için yasaktır.
           </p>
           <p>
-            Sitedeki istatistikler geçmiş verilerdir ve gelecekteki sonuçlar için hiçbir garanti vermez. Bu
-            bilgilere dayanarak alınan kararların sorumluluğu tamamen kullanıcıya aittir.
+            Kombine kuponlarda her eklenen maç tutma ihtimalini çarparak düşürür: %70 ihtimalli dört maçın birlikte tutma
+            ihtimali yaklaşık %24&apos;tür. Yalnızca kaybetmeyi göze alabileceğiniz tutarla oynayın.
           </p>
         </div>
       </Card>
 
-      <Card title="Veri kaynağı ve kişisel veriler">
-        <div className="space-y-3 text-sm text-muted">
-          <p>
-            Maç verileri lisanslı bir veri sağlayıcısından (API-Football) alınır. Veriler gecikmeli veya hatalı
-            olabilir; resmi sonuçlar için ilgili federasyon ve kulüplerin açıklamaları esastır.
-          </p>
-          <p>
-            Site üyelik sistemi içermez ve ziyaretçilerden kişisel veri toplamaz. İleride analitik veya çerez
-            kullanılması hâlinde 6698 sayılı KVKK kapsamında aydınlatma metni ve çerez onayı eklenecektir.
-          </p>
-        </div>
+      <Card title="Veri kaynağı">
+        <p className="text-sm text-muted">
+          Maç verileri API-Football&apos;dan alınır ve gecikmeli veya hatalı olabilir. Resmi sonuçlar için federasyon ve
+          kulüp açıklamaları esastır.
+        </p>
       </Card>
 
       <Card title="Yardım">
         <p className="text-sm text-muted">
-          Kendiniz veya bir yakınınız için şans oyunları bir sorun hâline geldiyse Yeşilay Danışmanlık Merkezi
-          (YEDAM) <strong className="text-white">115</strong> numaralı hattan ücretsiz destek verir.
+          Şans oyunları sizin veya bir yakınınız için sorun hâline geldiyse Yeşilay Danışmanlık Merkezi (YEDAM){" "}
+          <strong className="text-white">115</strong> numaralı hattan ücretsiz destek verir.
         </p>
       </Card>
     </div>

@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { ErrorNote, FormBadges, TeamLogo } from "@/components/ui";
+import { ErrorNote, FormBadges, PickChip, TeamLogo } from "@/components/ui";
 import { getProvider } from "@/lib/data";
 import { addDays, formatDate, formatTime, isValidDate, today } from "@/lib/date";
+import { predict } from "@/lib/prediction";
 import type { League, Match, StandingRow } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -30,10 +31,13 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ g
   }
 
   const standings = new Map<string, StandingRow>();
+  const tables = new Map<string, StandingRow[]>();
   await Promise.all(
     [...byLeague.keys()].map(async (id) => {
       try {
-        for (const row of await provider.getStandings(id)) standings.set(row.team.id, row);
+        const table = await provider.getStandings(id);
+        tables.set(id, table);
+        for (const row of table) standings.set(row.team.id, row);
       } catch {
         // Kupa maçlarında puan durumu olmayabilir; satırlar formsuz gösterilir.
       }
@@ -79,11 +83,17 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ g
             <Link href={`/lig/${league.id}`} className="text-sm font-semibold hover:text-accent">
               {league.country} · {league.name}
             </Link>
-            <span className="hidden text-xs text-muted sm:block">Sıra · Son 5 · Gol ort. (attığı/yediği)</span>
+            <span className="hidden text-xs text-muted sm:block">Sıra · Son 5 · Gol ort. (attığı/yediği) · Öneri</span>
           </header>
           <ul className="divide-y divide-line">
             {matches.map((m) => (
-              <MatchRow key={m.id} match={m} home={standings.get(m.home.id)} away={standings.get(m.away.id)} />
+              <MatchRow
+                key={m.id}
+                match={m}
+                home={standings.get(m.home.id)}
+                away={standings.get(m.away.id)}
+                table={tables.get(league.id)}
+              />
             ))}
           </ul>
         </section>
@@ -92,7 +102,19 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ g
   );
 }
 
-function MatchRow({ match: m, home, away }: { match: Match; home?: StandingRow; away?: StandingRow }) {
+function MatchRow({
+  match: m,
+  home,
+  away,
+  table,
+}: {
+  match: Match;
+  home?: StandingRow;
+  away?: StandingRow;
+  table?: StandingRow[];
+}) {
+  // Biten maçlarda puan durumu o maçın sonucunu da içerdiği için öneri gösterilmez.
+  const pred = m.status === "scheduled" && home && away && table ? predict(home, away, table) : null;
   const center =
     m.status === "scheduled" ? (
       <span className="text-sm text-muted">{formatTime(m.kickoff)}</span>
@@ -112,6 +134,11 @@ function MatchRow({ match: m, home, away }: { match: Match; home?: StandingRow; 
           {center}
           {m.status === "live" && <span className="text-[10px] font-bold text-loss">CANLI</span>}
           {m.status === "finished" && <span className="text-[10px] text-muted">MS</span>}
+          {pred && (
+            <span className="mt-1">
+              <PickChip market={pred.main.market} p={pred.main.p} small />
+            </span>
+          )}
         </div>
         <TeamSide team={m.away} row={away} align="left" />
       </Link>

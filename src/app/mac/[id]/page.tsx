@@ -3,9 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MatchResults } from "@/components/MatchResults";
 import { StandingsTable } from "@/components/StandingsTable";
-import { Card, CompareRow, dec, FormBadges, pct, TeamLogo } from "@/components/ui";
+import { Card, CompareRow, dec, FormBadges, pct, PickChip, TeamLogo } from "@/components/ui";
 import { getProvider } from "@/lib/data";
 import { formatDate, formatTime } from "@/lib/date";
+import { percent, predict, type Market, type Prediction } from "@/lib/prediction";
 import { headToHeadStats, teamStats, type TeamStats } from "@/lib/stats";
 import type { StandingRow } from "@/lib/types";
 
@@ -43,6 +44,10 @@ export default async function MatchPage({ params }: Props) {
   const awayAway = teamStats(match.away.id, am, "away");
   const h = headToHeadStats(match.home.id, match.away.id, h2hBefore);
 
+  const homeRow = standings.find((r) => r.team.id === match.home.id);
+  const awayRow = standings.find((r) => r.team.id === match.away.id);
+  const pred = match.status === "scheduled" && homeRow && awayRow ? predict(homeRow, awayRow, standings) : null;
+
   return (
     <div className="space-y-6">
       <section className="rounded-xl border border-line bg-panel p-5">
@@ -69,6 +74,15 @@ export default async function MatchPage({ params }: Props) {
           <TeamHeader team={match.away} form={away10.form} />
         </div>
       </section>
+
+      {match.status === "scheduled" &&
+        (pred ? (
+          <PredictionCard pred={pred} />
+        ) : (
+          <p className="rounded-xl border border-line bg-panel p-4 text-sm text-muted">
+            Bu maç için öneri hesaplanamadı (puan durumu yok, ör. kupa maçı).
+          </p>
+        ))}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card title={`Son ${Math.max(home10.played, away10.played)} maç · tüm turnuvalar`}>
@@ -124,7 +138,7 @@ export default async function MatchPage({ params }: Props) {
       )}
 
       <p className="text-center text-xs text-muted">
-        Bu sayfadaki tüm rakamlar geçmiş maçlardan hesaplanmıştır ve maçın sonucuna dair bir öngörü içermez.
+        Öneri bu sezonun gol ortalamalarından hesaplanan istatistiksel bir tahmindir; garanti değildir.
       </p>
     </div>
   );
@@ -167,5 +181,59 @@ function H2HTile({ label, value, total }: { label: string; value: number; total:
       <div className="truncate text-xs text-muted">{label}</div>
       <div className="text-[11px] text-muted">{pct(Math.round((value / total) * 100))}</div>
     </div>
+  );
+}
+
+const GROUPS: { title: string; markets: Market[] }[] = [
+  { title: "Maç sonucu", markets: ["1", "X", "2"] },
+  { title: "Çifte şans", markets: ["1X", "X2"] },
+  { title: "Toplam gol", markets: ["2.5 Üst", "2.5 Alt"] },
+  { title: "Karşılıklı gol", markets: ["KG Var", "KG Yok"] },
+];
+
+function PredictionCard({ pred }: { pred: Prediction }) {
+  return (
+    <Card title="Bültenin Oğlu'nun önerisi">
+      <div className="grid gap-6 md:grid-cols-[16rem_1fr]">
+        <div className="flex flex-col items-center justify-center gap-2 rounded-lg bg-panel-2 p-4 text-center">
+          <PickChip market={pred.main.market} p={pred.main.p} />
+          <div className="text-sm">{pred.main.label}</div>
+          <div className="text-xs text-muted">
+            Beklenen gol: {dec(pred.xgHome)} - {dec(pred.xgAway)}
+          </div>
+          <div className="text-xs text-muted">
+            Olası skorlar: {pred.topScores.map((s) => `${s.home}-${s.away} (${percent(s.p)})`).join(", ")}
+          </div>
+          {pred.lowSample && (
+            <div className="text-[11px] text-draw">Az maç oynandı; ihtimaller lig ortalamasına yakın tutuldu.</div>
+          )}
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {GROUPS.map((g) => (
+            <div key={g.title}>
+              <div className="mb-2 text-xs font-semibold text-muted uppercase">{g.title}</div>
+              <ul className="space-y-1.5">
+                {g.markets.map((m) => {
+                  const p = pred.picks[m];
+                  return (
+                    <li key={m} className="text-sm">
+                      <div className="flex justify-between">
+                        <span>
+                          <strong>{m}</strong> <span className="text-xs text-muted">{p.label}</span>
+                        </span>
+                        <span className={p.market === pred.main.market ? "font-bold text-accent" : ""}>{percent(p.p)}</span>
+                      </div>
+                      <div className="mt-0.5 h-1.5 overflow-hidden rounded bg-panel-2">
+                        <div className={p.market === pred.main.market ? "h-full bg-accent" : "h-full bg-muted/50"} style={{ width: `${p.p * 100}%` }} />
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Card>
   );
 }

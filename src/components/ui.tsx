@@ -136,3 +136,14 @@ export function ErrorNote({ message }: { message: string }) {
 
 export const pct = (v: number) => `%${v}`;
 export const dec = (v: number) => v.toFixed(2);
+
+/** Öneriyi ihtimaline göre renklendirir: %65+ yeşil, %55+ sarı, altı gri. */
+export function PickChip({ market, p, small = false }: { market: string; p: number; small?: boolean }) {
+  const cls = p >= 0.65 ? "border-accent/50 bg-accent/15 text-accent" : p >= 0.55 ? "border-draw/50 bg-draw/10 text-draw" : "border-line bg-panel-2 text-muted";
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-md border font-semibold whitespace-nowrap ${cls} ${small ? "px-1.5 py-0.5 text-[11px]" : "px-2.5 py-1 text-sm"}`}>
+      {market}
+      <span className="font-normal opacity-80">%{Math.round(p * 100)}</span>
+    </span>
+  );
+}

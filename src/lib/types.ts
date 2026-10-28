@@ -27,6 +27,12 @@ export interface Match {
 /** Son maçtan önceki sonuç en solda, en son maç en sağda. */
 export type FormResult = "W" | "D" | "L";
 
+export interface VenueSplit {
+  played: number;
+  goalsFor: number;
+  goalsAgainst: number;
+}
+
 export interface StandingRow {
   rank: number;
   team: Team;
@@ -38,6 +44,8 @@ export interface StandingRow {
   goalsAgainst: number;
   points: number;
   form: FormResult[];
+  home?: VenueSplit;
+  away?: VenueSplit;
 }
 
 export interface DataProvider {

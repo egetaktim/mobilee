@@ -21,8 +21,20 @@ interface ApiStanding {
   team: { id: number; name: string; logo: string };
   points: number;
   form: string | null;
-  all: { played: number; win: number; draw: number; lose: number; goals: { for: number; against: number } };
+  all: ApiSplit;
+  home: ApiSplit;
+  away: ApiSplit;
 }
+
+interface ApiSplit {
+  played: number;
+  win: number;
+  draw: number;
+  lose: number;
+  goals: { for: number; against: number };
+}
+
+const split = (s: ApiSplit) => ({ played: s.played, goalsFor: s.goals.for, goalsAgainst: s.goals.against });
 
 async function api<T>(path: string, params: Record<string, string | number>, revalidate: number): Promise<T[]> {
   const url = new URL(BASE + path);
@@ -144,6 +156,8 @@ export const apiFootballProvider: DataProvider = {
         points: s.points,
         // API "WWDLW" formatında en yeniyi solda verir; biz en yeniyi sağda tutarız.
         form: (s.form ?? "").split("").filter((c): c is FormResult => c === "W" || c === "D" || c === "L").reverse(),
+        home: split(s.home),
+        away: split(s.away),
       }),
     );
   },

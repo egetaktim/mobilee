@@ -1,10 +1,7 @@
-# Bülteninoğlu
+# Bültenin Oğlu
 
-Maç öncesi futbol **istatistikleri** sitesi: form, gol ortalamaları, alt/üst ve karşılıklı gol yüzdeleri,
-iç saha/deplasman ayrımı, aralarındaki maçlar ve puan durumu.
-
-Site bilinçli olarak **tahmin, kupon, bahis oranı veya bahis sitesi bağlantısı içermez**. Bütün rakamlar
-oynanmış maç skorlarından doğrudan hesaplanır (`src/lib/stats.ts`).
+Arkadaş grubu için özel futbol istatistik ve öneri sitesi: form, gol ortalamaları, alt/üst ve karşılıklı
+gol yüzdeleri, iç saha/deplasman ayrımı, aralarındaki maçlar, puan durumu ve istatistiksel öneriler.
 
 ## Çalıştırma
 
@@ -23,23 +20,24 @@ rastgele üretilir ve her sayfada uyarı görünür.
 3. Takip edilen ligler `src/lib/leagues.ts` içindedir.
 
 Yanıtlar Next.js önbelleğinde tutulur (fikstür 5 dk, istatistikler 1 saat). Bir maç sayfası ilk açılışta
-yaklaşık 5 istek yapar; yüksek trafik için ücretli plan gerekir.
+yaklaşık 5 istek yapar.
 
-## Yapı
+## Öneri modeli
+
+`src/lib/prediction.ts`: Takımların bu sezonki iç saha / deplasman gol ortalamalarından beklenen gol
+hesaplanır (az maçta lig ortalamasına çekilir), Poisson dağılımıyla skor olasılıkları bulunur. Öneri,
+1 / X / 2 / 2.5 Üst-Alt / KG Var-Yok arasında ihtimali en yüksek seçenektir. Öneriler yalnızca
+başlamamış maçlar için gösterilir. Model kadro, sakatlık ve motivasyon bilgisi kullanmaz ve geçmiş
+maçlarda başarısı ölçülmemiştir.
+
+## Sayfalar
 
 | Yol | İçerik |
 |---|---|
-| `/` | Seçilen günün maçları; sıra, son 5 maç formu, gol ortalamaları |
-| `/mac/[id]` | İki takımın karşılaştırmalı istatistikleri, H2H, son maçlar, puan durumu |
+| `/` | Seçilen günün maçları; sıra, son 5 maç formu, gol ortalamaları, öneri |
+| `/oneriler` | Bugün ve yarının maçları, öneri ihtimaline göre sıralı |
+| `/mac/[id]` | Öneri kartı, karşılaştırmalı istatistikler, H2H, son maçlar, puan durumu |
 | `/lig/[id]` | Puan durumu, lig ortalamaları, takım bazında gol istatistikleri |
 | `/takim/[id]` | Genel / iç saha / deplasman istatistikleri ve son maçlar |
-| `/hakkinda` | Her istatistiğin nasıl hesaplandığı |
-| `/yasal-uyari` | Yasal uyarı ve kullanım koşulları |
-
-## Yasal notlar
-
-- Yasa dışı bahis reklamı ve bahse yönlendirme 7258 sayılı Kanun kapsamında suçtur. Siteye bahis oranı,
-  bahis sitesi reklamı veya affiliate bağlantısı **eklemeyin**.
-- Maç verilerini başka sitelerden kazımak (scraping) telif ve veritabanı haklarını ihlal edebilir;
-  lisanslı bir API kullanın.
-- Yayına almadan önce bir hukukçuya danışmanız önerilir.
+| `/hakkinda` | İstatistiklerin ve öneri modelinin nasıl hesaplandığı |
+| `/yasal-uyari` | Uyarılar |
