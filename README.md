@@ -1,4 +1,4 @@
-# GolVeri
+# Bülteninoğlu
 
 Maç öncesi futbol **istatistikleri** sitesi: form, gol ortalamaları, alt/üst ve karşılıklı gol yüzdeleri,
 iç saha/deplasman ayrımı, aralarındaki maçlar ve puan durumu.

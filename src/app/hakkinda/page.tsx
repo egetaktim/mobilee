@@ -20,7 +20,7 @@ export default function AboutPage() {
     <div className="mx-auto max-w-3xl space-y-6">
       <h1 className="text-2xl font-bold">İstatistikler nasıl hesaplanır?</h1>
       <p className="text-muted">
-        GolVeri&apos;deki her rakam oynanmış maçların skorlarından doğrudan hesaplanır. Hiçbir rakam model, yapay
+        Bülteninoğlu&apos;ndaki her rakam oynanmış maçların skorlarından doğrudan hesaplanır. Hiçbir rakam model, yapay
         zekâ veya yorum içermez; maçın nasıl biteceğine dair bir öngörü değildir.
       </p>
       <Card>

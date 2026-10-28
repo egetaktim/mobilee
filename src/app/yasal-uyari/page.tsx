@@ -10,7 +10,7 @@ export default function LegalPage() {
 
       <Card title="Bu site ne yapar, ne yapmaz?">
         <ul className="list-disc space-y-2 pl-5 text-sm">
-          <li>GolVeri yalnızca oynanmış futbol maçlarının sonuçlarından derlenen <strong>istatistikleri</strong> gösterir.</li>
+          <li>Bülteninoğlu yalnızca oynanmış futbol maçlarının sonuçlarından derlenen <strong>istatistikleri</strong> gösterir.</li>
           <li>Site <strong>tahmin, kupon, &quot;banko&quot; veya bahis tavsiyesi sunmaz</strong>; hiçbir içerik bir sonuca bahis yapılmasını önermez.</li>
           <li>Site <strong>bahis oranı yayınlamaz</strong>, bahis sitelerinin reklamını yapmaz ve bu sitelere bağlantı vermez.</li>
           <li>Site <strong>bahis kabul etmez</strong>, para yatırma veya ödeme işlemi barındırmaz.</li>
@@ -23,7 +23,7 @@ export default function LegalPage() {
           <p>
             Türkiye&apos;de spor müsabakalarına dayalı bahis yalnızca yetkili kuruluşlar tarafından düzenlenebilir.
             7258 sayılı Kanun uyarınca izinsiz bahis oynatmak, buna yer veya imkân sağlamak ve bu tür oyunların
-            reklamını yapmak suçtur. GolVeri bu faaliyetlerin hiçbirini yürütmez ve desteklemez.
+            reklamını yapmak suçtur. Bülteninoğlu bu faaliyetlerin hiçbirini yürütmez ve desteklemez.
           </p>
           <p>
             Sitedeki istatistikler geçmiş verilerdir ve gelecekteki sonuçlar için hiçbir garanti vermez. Bu

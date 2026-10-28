@@ -8,7 +8,7 @@ import "./globals.css";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: { default: "GolVeri – Futbol İstatistikleri", template: "%s · GolVeri" },
+  title: { default: "Bülteninoğlu – Futbol İstatistikleri", template: "%s · Bülteninoğlu" },
   description:
     "Maç öncesi form, gol ortalamaları, alt/üst ve karşılıklı gol yüzdeleri, H2H ve puan durumu. Bahis tavsiyesi içermez.",
 };
@@ -29,7 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <header className="sticky top-0 z-10 border-b border-line bg-bg/90 backdrop-blur">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-3">
             <Link href="/" className="text-lg font-extrabold tracking-tight">
-              Gol<span className="text-accent">Veri</span>
+              Bülten<span className="text-accent">inoğlu</span>
             </Link>
             <nav className="-mx-2 flex max-w-full gap-1 overflow-x-auto text-sm whitespace-nowrap">
               {NAV.map((n) => (
@@ -44,7 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <footer className="border-t border-line bg-panel">
           <div className="mx-auto max-w-6xl space-y-2 px-4 py-6 text-xs text-muted">
             <p>
-              GolVeri yalnızca geçmiş maç verilerinden derlenen istatistikleri gösterir.{" "}
+              Bülteninoğlu yalnızca geçmiş maç verilerinden derlenen istatistikleri gösterir.{" "}
               <strong className="text-white">Tahmin, kupon veya bahis tavsiyesi sunmaz;</strong> bahis oranı yayınlamaz,
               bahis sitelerine yönlendirme yapmaz ve hiçbir şekilde bahis kabul etmez.
             </p>
@@ -54,7 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 Yasal uyarıyı okuyun.
               </Link>
             </p>
-            <p>© {new Date().getFullYear()} GolVeri</p>
+            <p>© {new Date().getFullYear()} Bülteninoğlu</p>
           </div>
         </footer>
       </body>
