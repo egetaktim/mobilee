@@ -10,17 +10,22 @@ npm install
 npm run dev      # http://localhost:3000
 ```
 
-`API_FOOTBALL_KEY` tanımlı değilse site **demo verisiyle** çalışır: takım isimleri gerçektir, skorlar
-rastgele üretilir ve her sayfada uyarı görünür.
+Anahtar tanımlı değilse site **demo verisiyle** çalışır: takım isimleri gerçektir, skorlar rastgele
+üretilir ve her sayfada uyarı görünür.
 
 ## Gerçek veri
 
-1. https://www.api-football.com adresinden anahtar alın (ücretsiz plan günde 100 istek).
-2. `.env.example` dosyasını `.env.local` olarak kopyalayıp anahtarı yazın.
-3. Takip edilen ligler `src/lib/leagues.ts` içindedir.
+`.env.example` dosyasını `.env.local` olarak kopyalayıp anahtarları yazın (`.env.local` git'e girmez).
 
-Yanıtlar Next.js önbelleğinde tutulur (fikstür 5 dk, istatistikler 1 saat). Bir maç sayfası ilk açılışta
-yaklaşık 5 istek yapar.
+| Değişken | Kaynak | Ne sağlar |
+|---|---|---|
+| `FOOTBALL_DATA_KEY` | [football-data.org](https://www.football-data.org) (ücretsiz) | Premier League, Championship, La Liga, Serie A, Bundesliga, Ligue 1, Portekiz, Hollanda, Şampiyonlar Ligi: maçlar, istatistikler, öneriler |
+| `API_FOOTBALL_KEY` | [api-football.com](https://www.api-football.com) | Süper Lig, 1. Lig, Avrupa Ligi, Konferans Ligi |
+| `API_FOOTBALL_PAID` | | `1` ise API-Football liglerinde de istatistik/öneri açılır. Ücretsiz planda (`0`) yalnızca dün/bugün/yarının maç listesi gelir |
+
+Kimlikler kaynağa göre öneklidir (`fd-`, `af-`); `src/lib/data/index.ts` istekleri doğru kaynağa yönlendirir.
+Bir kaynak hata verirse diğerinin maçları yine gösterilir. football-data.org ücretsiz planı dakikada 10
+istek verir; yanıtlar Next.js önbelleğinde 5 dk – 24 saat tutulur. Lig listeleri `src/lib/leagues.ts` içindedir.
 
 ## Öneri modeli
 

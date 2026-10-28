@@ -8,7 +8,7 @@ import { getProvider } from "@/lib/data";
 import { formatDate, formatTime } from "@/lib/date";
 import { percent, predict, type Market, type Prediction } from "@/lib/prediction";
 import { headToHeadStats, teamStats, type TeamStats } from "@/lib/stats";
-import type { StandingRow } from "@/lib/types";
+import type { Match, StandingRow } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -25,12 +25,17 @@ export default async function MatchPage({ params }: Props) {
   const match = await provider.getMatch(id);
   if (!match) notFound();
 
-  const [homeMatches, awayMatches, h2h, standings] = await Promise.all([
-    provider.getTeamMatches(match.home.id, 20),
-    provider.getTeamMatches(match.away.id, 20),
-    provider.getHeadToHead(match.home.id, match.away.id, 10),
-    provider.getStandings(match.league.id).catch((): StandingRow[] => []),
-  ]);
+  const hasStats = provider.hasStats(match.league.id);
+  const none = (): Match[] => [];
+  // Bir istek (ör. dakikalık limit) düşerse sayfa yine açılsın, o bölüm boş kalsın.
+  const [homeMatches, awayMatches, h2h, standings] = hasStats
+    ? await Promise.all([
+        provider.getTeamMatches(match.home.id, 20).catch(none),
+        provider.getTeamMatches(match.away.id, 20).catch(none),
+        provider.getHeadToHead(match, 10).catch(none),
+        provider.getStandings(match.league.id).catch((): StandingRow[] => []),
+      ])
+    : [[], [], [], []];
 
   // Bitmiş bir maçı görüntülerken o maçın kendisi "öncesi" istatistiklere karışmasın.
   const before = (list: typeof homeMatches) => list.filter((m) => m.kickoff < match.kickoff);
@@ -75,26 +80,33 @@ export default async function MatchPage({ params }: Props) {
         </div>
       </section>
 
-      {match.status === "scheduled" &&
-        (pred ? (
-          <PredictionCard pred={pred} />
-        ) : (
-          <p className="rounded-xl border border-line bg-panel p-4 text-sm text-muted">
-            Bu maç için öneri hesaplanamadı (puan durumu yok, ör. kupa maçı).
-          </p>
-        ))}
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card title={`Son ${Math.max(home10.played, away10.played)} maç · tüm turnuvalar`}>
-          <StatsCompare home={home10} away={away10} />
-        </Card>
-        <Card title={`${match.home.name} evinde · ${match.away.name} deplasmanda`}>
-          {homeAtHome.played && awayAway.played ? (
-            <>
-              <StatsCompare home={homeAtHome} away={awayAway} />
-              <p className="mt-2 text-[11px] text-muted">
-                Ev: son {homeAtHome.played} iç saha maçı · Deplasman: son {awayAway.played} dış saha maçı
+      {!hasStats ? (
+        <p className="rounded-xl border border-draw/40 bg-draw/10 p-4 text-sm text-draw">
+          Bu lig için istatistik ve öneri yok: veri kaynağının (API-Football) ücretsiz planı yalnızca maç listesini
+          veriyor. Ücretli plana geçilirse bu sayfa diğer liglerdeki gibi dolar.
+        </p>
+      ) : (
+        <>
+          {match.status === "scheduled" &&
+            (pred ? (
+              <PredictionCard pred={pred} />
+            ) : (
+              <p className="rounded-xl border border-line bg-panel p-4 text-sm text-muted">
+                Bu maç için öneri hesaplanamadı (puan durumu yok, ör. kupa maçı).
               </p>
+            ))}
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card title={`Son ${Math.max(home10.played, away10.played)} maç · tüm turnuvalar`}>
+              <StatsCompare home={home10} away={away10} />
+            </Card>
+            <Card title={`${match.home.name} evinde · ${match.away.name} deplasmanda`}>
+              {homeAtHome.played && awayAway.played ? (
+                <>
+                  <StatsCompare home={homeAtHome} away={awayAway} />
+                  <p className="mt-2 text-[11px] text-muted">
+                    Ev: son {homeAtHome.played} iç saha maçı · Deplasman: son {awayAway.played} dış saha maçı
+                  </p>
             </>
           ) : (
             <p className="text-sm text-muted">Yeterli veri yok.</p>
@@ -135,6 +147,9 @@ export default async function MatchPage({ params }: Props) {
         <Card title="Puan durumu">
           <StandingsTable rows={standings} highlight={[match.home.id, match.away.id]} />
         </Card>
+      )}
+
+        </>
       )}
 
       <p className="text-center text-xs text-muted">

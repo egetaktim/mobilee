@@ -50,6 +50,8 @@ export interface StandingRow {
 
 export interface DataProvider {
   readonly isDemo: boolean;
+  /** Bu lig için form, istatistik ve öneri hesaplanabiliyor mu (ör. ücretsiz plan kısıtı)? */
+  hasStats(leagueId: string): boolean;
   getLeagues(): Promise<League[]>;
   getLeague(id: string): Promise<League | null>;
   getMatchesByDate(date: string): Promise<Match[]>;
@@ -57,8 +59,8 @@ export interface DataProvider {
   getTeam(id: string): Promise<Team | null>;
   /** Takımın oynanmış son maçları, yeniden eskiye. */
   getTeamMatches(teamId: string, last: number): Promise<Match[]>;
-  /** İki takım arasındaki oynanmış maçlar, yeniden eskiye. */
-  getHeadToHead(teamA: string, teamB: string, last: number): Promise<Match[]>;
+  /** Maçtaki iki takımın birbirleriyle oynadığı maçlar, yeniden eskiye. */
+  getHeadToHead(match: Match, last: number): Promise<Match[]>;
   getStandings(leagueId: string): Promise<StandingRow[]>;
   /** Ligin bu sezon oynanmış tüm maçları. */
   getLeagueResults(leagueId: string): Promise<Match[]>;

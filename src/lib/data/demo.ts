@@ -3,7 +3,8 @@
  * ama tüm skorlar rastgele üretilir; site bu modda "DEMO" uyarısı gösterir.
  */
 import { addDays, currentSeason, toLocalDate } from "../date";
-import type { DataProvider, FormResult, League, Match, StandingRow, Team } from "../types";
+import { buildStandings } from "../standings";
+import type { DataProvider, League, Match, Team } from "../types";
 
 const DEMO_LEAGUES: { id: string; name: string; country: string; teams: string[] }[] = [
   {
@@ -162,6 +163,7 @@ const newestFirst = (list: Match[]) => [...list].reverse();
 
 export const demoProvider: DataProvider = {
   isDemo: true,
+  hasStats: () => true,
 
   async getLeagues() {
     return buildDb().leagues;
@@ -189,7 +191,9 @@ export const demoProvider: DataProvider = {
     ).slice(0, last);
   },
 
-  async getHeadToHead(a, b, last) {
+  async getHeadToHead(match, last) {
+    const a = match.home.id;
+    const b = match.away.id;
     return newestFirst(
       buildDb().matches.filter(
         (m) =>
@@ -207,43 +211,7 @@ export const demoProvider: DataProvider = {
 
   async getStandings(leagueId) {
     const db = buildDb();
-    const results = await this.getLeagueResults(leagueId);
-    const rows = new Map<string, StandingRow>();
-    for (const [teamId, lid] of db.teamLeague) {
-      if (lid !== leagueId) continue;
-      rows.set(teamId, {
-        rank: 0, team: db.teams.get(teamId)!, played: 0, won: 0, drawn: 0, lost: 0,
-        goalsFor: 0, goalsAgainst: 0, points: 0, form: [],
-        home: { played: 0, goalsFor: 0, goalsAgainst: 0 },
-        away: { played: 0, goalsFor: 0, goalsAgainst: 0 },
-      });
-    }
-    const apply = (row: StandingRow, gf: number, ga: number, venue: "home" | "away") => {
-      const r: FormResult = gf > ga ? "W" : gf < ga ? "L" : "D";
-      const split = row[venue]!;
-      split.played++;
-      split.goalsFor += gf;
-      split.goalsAgainst += ga;
-      row.played++;
-      row.goalsFor += gf;
-      row.goalsAgainst += ga;
-      if (r === "W") (row.won++, (row.points += 3));
-      else if (r === "D") (row.drawn++, row.points++);
-      else row.lost++;
-      row.form = [...row.form, r].slice(-5);
-    };
-    for (const m of results) {
-      apply(rows.get(m.home.id)!, m.score!.home, m.score!.away, "home");
-      apply(rows.get(m.away.id)!, m.score!.away, m.score!.home, "away");
-    }
-    return [...rows.values()]
-      .sort(
-        (x, y) =>
-          y.points - x.points ||
-          y.goalsFor - y.goalsAgainst - (x.goalsFor - x.goalsAgainst) ||
-          y.goalsFor - x.goalsFor ||
-          x.team.name.localeCompare(y.team.name, "tr"),
-      )
-      .map((row, i) => ({ ...row, rank: i + 1 }));
+    const teams = [...db.teamLeague].filter(([, lid]) => lid === leagueId).map(([id]) => db.teams.get(id)!);
+    return buildStandings(await this.getLeagueResults(leagueId), teams);
   },
 };

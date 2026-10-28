@@ -1,6 +1,10 @@
-/** https://www.api-football.com (v3) üzerinden gerçek veri. */
-import { currentSeason } from "../date";
-import { TRACKED_LEAGUES } from "../leagues";
+/**
+ * https://www.api-football.com (v3). Ücretsiz plan yalnızca dün/bugün/yarının
+ * fikstürünü verir (sezon ve "last" sorguları kapalı); `limited` modda istatistik
+ * istekleri hiç gönderilmez.
+ */
+import { currentSeason, today } from "../date";
+import { API_FOOTBALL_LEAGUES } from "../leagues";
 import type { DataProvider, FormResult, League, Match, MatchStatus, StandingRow } from "../types";
 
 const BASE = "https://v3.football.api-sports.io";
@@ -57,13 +61,16 @@ function status(short: string): MatchStatus {
   return "other";
 }
 
+const P = "af-";
+const raw = (id: string) => id.replace(P, "");
+
 function toMatch(f: ApiFixture): Match {
-  const tracked = TRACKED_LEAGUES.find((l) => l.id === String(f.league.id));
+  const tracked = API_FOOTBALL_LEAGUES.find((l) => l.id === String(f.league.id));
   const s = status(f.fixture.status.short);
   return {
-    id: String(f.fixture.id),
+    id: P + f.fixture.id,
     league: {
-      id: String(f.league.id),
+      id: P + f.league.id,
       name: tracked?.name ?? f.league.name,
       country: tracked?.country ?? f.league.country,
       season: f.league.season,
@@ -71,8 +78,8 @@ function toMatch(f: ApiFixture): Match {
     },
     kickoff: f.fixture.date,
     status: s,
-    home: { id: String(f.teams.home.id), name: f.teams.home.name, logo: f.teams.home.logo },
-    away: { id: String(f.teams.away.id), name: f.teams.away.name, logo: f.teams.away.logo },
+    home: { id: P + f.teams.home.id, name: f.teams.home.name, logo: f.teams.home.logo },
+    away: { id: P + f.teams.away.id, name: f.teams.away.name, logo: f.teams.away.logo },
     score:
       s !== "scheduled" && f.goals.home !== null && f.goals.away !== null
         ? { home: f.goals.home, away: f.goals.away }
@@ -80,85 +87,103 @@ function toMatch(f: ApiFixture): Match {
   };
 }
 
-const trackedIds = new Set<string>(TRACKED_LEAGUES.map((l) => l.id));
+export function createApiFootballProvider({
+  leagues,
+  limited,
+}: {
+  leagues: readonly string[];
+  limited: boolean;
+}): DataProvider {
+  const tracked = API_FOOTBALL_LEAGUES.filter((l) => leagues.includes(l.id));
+  const trackedIds = new Set<string>(tracked.map((l) => l.id));
+  const league = (id: string): League | null => {
+    const l = tracked.find((x) => x.id === raw(id));
+    return l ? { id: P + l.id, name: l.name, country: l.country, season: currentSeason() } : null;
+  };
 
-function leagueFromConfig(id: string): League | null {
-  const l = TRACKED_LEAGUES.find((x) => x.id === id);
-  return l ? { id: l.id, name: l.name, country: l.country, season: currentSeason() } : null;
+  return {
+    isDemo: false,
+    hasStats: () => !limited,
+
+    async getLeagues() {
+      return tracked.map((l) => league(l.id)!);
+    },
+
+    async getLeague(id) {
+      return league(id);
+    },
+
+    async getMatchesByDate(date) {
+      if (limited && Math.abs(Date.parse(date) - Date.parse(today())) > 86400_000) return [];
+      const list = await api<ApiFixture>("/fixtures", { date, timezone: "Europe/Istanbul" }, 1800);
+      return list.filter((f) => trackedIds.has(String(f.league.id))).map(toMatch);
+    },
+
+    async getMatch(id) {
+      const [f] = await api<ApiFixture>("/fixtures", { id: raw(id) }, 1800);
+      return f ? toMatch(f) : null;
+    },
+
+    async getTeam(id) {
+      const [t] = await api<{ team: { id: number; name: string; logo: string } }>("/teams", { id: raw(id) }, 86400);
+      return t ? { id: P + t.team.id, name: t.team.name, logo: t.team.logo } : null;
+    },
+
+    async getTeamMatches(teamId, last) {
+      if (limited) return [];
+      const list = await api<ApiFixture>("/fixtures", { team: raw(teamId), last }, 3600);
+      return list.map(toMatch).filter((m) => m.status === "finished");
+    },
+
+    async getHeadToHead(match, last) {
+      if (limited) return [];
+      const list = await api<ApiFixture>(
+        "/fixtures/headtohead",
+        { h2h: `${raw(match.home.id)}-${raw(match.away.id)}`, last },
+        3600,
+      );
+      return list
+        .map(toMatch)
+        .filter((m) => m.status === "finished")
+        .sort((x, y) => y.kickoff.localeCompare(x.kickoff));
+    },
+
+    async getLeagueResults(leagueId) {
+      if (limited) return [];
+      const list = await api<ApiFixture>(
+        "/fixtures",
+        { league: raw(leagueId), season: currentSeason(), status: "FT-AET-PEN" },
+        3600,
+      );
+      return list.map(toMatch);
+    },
+
+    async getStandings(leagueId) {
+      if (limited) return [];
+      const res = await api<{ league: { standings: ApiStanding[][] } }>(
+        "/standings",
+        { league: raw(leagueId), season: currentSeason() },
+        3600,
+      );
+      // Gruplu turnuvalarda tüm grupları tek listede birleştir.
+      const groups = res[0]?.league.standings ?? [];
+      return groups.flat().map(
+        (s): StandingRow => ({
+          rank: s.rank,
+          team: { id: P + s.team.id, name: s.team.name, logo: s.team.logo },
+          played: s.all.played,
+          won: s.all.win,
+          drawn: s.all.draw,
+          lost: s.all.lose,
+          goalsFor: s.all.goals.for,
+          goalsAgainst: s.all.goals.against,
+          points: s.points,
+          // API "WWDLW" formatında en yeniyi solda verir; biz en yeniyi sağda tutarız.
+          form: (s.form ?? "").split("").filter((c): c is FormResult => c === "W" || c === "D" || c === "L").reverse(),
+          home: split(s.home),
+          away: split(s.away),
+        }),
+      );
+    },
+  };
 }
-
-export const apiFootballProvider: DataProvider = {
-  isDemo: false,
-
-  async getLeagues() {
-    return TRACKED_LEAGUES.map((l) => leagueFromConfig(l.id)!);
-  },
-
-  async getLeague(id) {
-    return leagueFromConfig(id);
-  },
-
-  async getMatchesByDate(date) {
-    const list = await api<ApiFixture>("/fixtures", { date, timezone: "Europe/Istanbul" }, 300);
-    return list.filter((f) => trackedIds.has(String(f.league.id))).map(toMatch);
-  },
-
-  async getMatch(id) {
-    const [f] = await api<ApiFixture>("/fixtures", { id }, 300);
-    return f ? toMatch(f) : null;
-  },
-
-  async getTeam(id) {
-    const [t] = await api<{ team: { id: number; name: string; logo: string } }>("/teams", { id }, 86400);
-    return t ? { id: String(t.team.id), name: t.team.name, logo: t.team.logo } : null;
-  },
-
-  async getTeamMatches(teamId, last) {
-    const list = await api<ApiFixture>("/fixtures", { team: teamId, last }, 3600);
-    return list.map(toMatch).filter((m) => m.status === "finished");
-  },
-
-  async getHeadToHead(a, b, last) {
-    const list = await api<ApiFixture>("/fixtures/headtohead", { h2h: `${a}-${b}`, last }, 3600);
-    return list
-      .map(toMatch)
-      .filter((m) => m.status === "finished")
-      .sort((x, y) => y.kickoff.localeCompare(x.kickoff));
-  },
-
-  async getLeagueResults(leagueId) {
-    const list = await api<ApiFixture>(
-      "/fixtures",
-      { league: leagueId, season: currentSeason(), status: "FT-AET-PEN" },
-      3600,
-    );
-    return list.map(toMatch);
-  },
-
-  async getStandings(leagueId) {
-    const res = await api<{ league: { standings: ApiStanding[][] } }>(
-      "/standings",
-      { league: leagueId, season: currentSeason() },
-      3600,
-    );
-    // Gruplu turnuvalarda (ör. eski format ŞL) tüm grupları tek listede birleştir.
-    const groups = res[0]?.league.standings ?? [];
-    return groups.flat().map(
-      (s): StandingRow => ({
-        rank: s.rank,
-        team: { id: String(s.team.id), name: s.team.name, logo: s.team.logo },
-        played: s.all.played,
-        won: s.all.win,
-        drawn: s.all.draw,
-        lost: s.all.lose,
-        goalsFor: s.all.goals.for,
-        goalsAgainst: s.all.goals.against,
-        points: s.points,
-        // API "WWDLW" formatında en yeniyi solda verir; biz en yeniyi sağda tutarız.
-        form: (s.form ?? "").split("").filter((c): c is FormResult => c === "W" || c === "D" || c === "L").reverse(),
-        home: split(s.home),
-        away: split(s.away),
-      }),
-    );
-  },
-};

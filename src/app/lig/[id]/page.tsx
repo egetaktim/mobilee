@@ -46,6 +46,12 @@ export default async function LeaguePage({ params }: Props) {
         </h1>
       </div>
 
+      {!provider.hasStats(id) && (
+        <p className="rounded-xl border border-draw/40 bg-draw/10 p-4 text-sm text-draw">
+          Bu lig için puan durumu ve istatistik yok: API-Football&apos;un ücretsiz planı yalnızca maç listesini veriyor.
+        </p>
+      )}
+
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatTile label="Oynanan maç" value={String(ls.played)} />
         <StatTile label="Maç başı gol" value={dec(ls.avgGoals)} hint={`Ev ${dec(ls.avgHomeGoals)} · Dep ${dec(ls.avgAwayGoals)}`} />
