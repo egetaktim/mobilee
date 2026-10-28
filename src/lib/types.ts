@@ -1,0 +1,57 @@
+export type MatchStatus = "scheduled" | "live" | "finished" | "other";
+
+export interface Team {
+  id: string;
+  name: string;
+  logo?: string;
+}
+
+export interface League {
+  id: string;
+  name: string;
+  country: string;
+  season: number;
+  logo?: string;
+}
+
+export interface Match {
+  id: string;
+  league: League;
+  kickoff: string; // ISO 8601
+  status: MatchStatus;
+  home: Team;
+  away: Team;
+  score: { home: number; away: number } | null;
+}
+
+/** Son maçtan önceki sonuç en solda, en son maç en sağda. */
+export type FormResult = "W" | "D" | "L";
+
+export interface StandingRow {
+  rank: number;
+  team: Team;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  points: number;
+  form: FormResult[];
+}
+
+export interface DataProvider {
+  readonly isDemo: boolean;
+  getLeagues(): Promise<League[]>;
+  getLeague(id: string): Promise<League | null>;
+  getMatchesByDate(date: string): Promise<Match[]>;
+  getMatch(id: string): Promise<Match | null>;
+  getTeam(id: string): Promise<Team | null>;
+  /** Takımın oynanmış son maçları, yeniden eskiye. */
+  getTeamMatches(teamId: string, last: number): Promise<Match[]>;
+  /** İki takım arasındaki oynanmış maçlar, yeniden eskiye. */
+  getHeadToHead(teamA: string, teamB: string, last: number): Promise<Match[]>;
+  getStandings(leagueId: string): Promise<StandingRow[]>;
+  /** Ligin bu sezon oynanmış tüm maçları. */
+  getLeagueResults(leagueId: string): Promise<Match[]>;
+}
