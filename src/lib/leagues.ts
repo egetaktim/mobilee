@@ -15,6 +15,7 @@ export const FOOTBALL_DATA_COMPETITIONS = [
 export const API_FOOTBALL_LEAGUES = [
   { id: "203", name: "Süper Lig", country: "Türkiye" },
   { id: "204", name: "1. Lig", country: "Türkiye" },
+  { id: "206", name: "Türkiye Kupası", country: "Türkiye" },
   { id: "39", name: "Premier League", country: "İngiltere" },
   { id: "140", name: "La Liga", country: "İspanya" },
   { id: "135", name: "Serie A", country: "İtalya" },
@@ -27,4 +28,4 @@ export const API_FOOTBALL_LEAGUES = [
 ] as const;
 
 /** football-data.org da tanımlıyken API-Football'dan yalnızca bunlar alınır. */
-export const API_FOOTBALL_ONLY = ["203", "204", "3", "848"];
+export const API_FOOTBALL_ONLY = ["203", "204", "206", "3", "848"];
